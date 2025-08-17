@@ -2,20 +2,69 @@
 
 # Build script for highlight tool
 
+# Build options
+BUILD_FLAGS="-ldflags=\"-s -w\" -trimpath"
+OPTIMIZATION="-gcflags=\"all=-N -l -c=2\" -asmflags=\"all=-trimpath=/go\""
+
 # Function to display usage information
 show_usage() {
   echo "Usage: $0 [options]"
   echo "Options:"
-  echo "  --all     Build for all platforms (Linux, macOS, Windows)"
-  echo "  --linux   Build for Linux"
-  echo "  --darwin  Build for macOS"
-  echo "  --windows Build for Windows"
-  echo "  --arm     Build for ARM (Linux)"
-  echo "  --help    Show this help message"
+  echo "  --all       Build for all platforms (Linux, macOS, Windows)"
+  echo "  --linux     Build for Linux"
+  echo "  --darwin    Build for macOS"
+  echo "  --windows   Build for Windows"
+  echo "  --arm       Build for ARM (Linux)"
+  echo "  --debug     Build with debug symbols (no optimization)"
+  echo "  --release   Build with maximum optimization (default)"
+  echo "  --upx       Compress binary with UPX (if available)"
+  echo "  --help      Show this help message"
 }
 
 # Create output directory if it doesn't exist
 mkdir -p build
+
+# Build parameters
+DEBUG=0
+COMPRESS=0
+
+# Function to build for a specific platform
+build_binary() {
+  local os=$1
+  local arch=$2
+  local arm=$3
+  local output=$4
+  local flags="-ldflags=\"-s -w\""
+  
+  # If debug mode is enabled, use debug flags
+  if [ $DEBUG -eq 1 ]; then
+    flags=""
+  fi
+  
+  # Build command
+  BUILD_CMD="GOOS=$os GOARCH=$arch"
+  
+  # Add GOARM if specified
+  if [ -n "$arm" ]; then
+    BUILD_CMD="$BUILD_CMD GOARM=$arm"
+  fi
+  
+  # Execute build
+  echo "Building highlight for $os/$arch..."
+  eval "$BUILD_CMD go build -trimpath $flags -o $output ./cmd/highlight"
+  
+  # Compress with UPX if requested
+  if [ $COMPRESS -eq 1 ]; then
+    if command -v upx &> /dev/null; then
+      echo "Compressing $output with UPX..."
+      upx -9 "$output"
+    else
+      echo "Warning: UPX not found, skipping compression"
+    fi
+  fi
+  
+  echo "Binary saved to $output"
+}
 
 # Default build for current platform
 if [ $# -eq 0 ]; then
@@ -29,32 +78,39 @@ fi
 while [ "$1" != "" ]; do
   case $1 in
     --all )
-      echo "Building highlight for all platforms..."
-      GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o build/highlight-linux-amd64 ./cmd/highlight
-      GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o build/highlight-darwin-amd64 ./cmd/highlight
-      GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o build/highlight-windows-amd64.exe ./cmd/highlight
-      GOOS=linux GOARCH=arm GOARM=7 go build -ldflags="-s -w" -trimpath -o build/highlight-linux-arm ./cmd/highlight
+      build_binary "linux" "amd64" "" "build/highlight-linux-amd64"
+      build_binary "darwin" "amd64" "" "build/highlight-darwin-amd64"
+      build_binary "windows" "amd64" "" "build/highlight-windows-amd64.exe"
+      build_binary "linux" "arm" "7" "build/highlight-linux-arm"
+      build_binary "linux" "arm64" "" "build/highlight-linux-arm64"
       echo "All binaries saved to build/ directory"
       ;;
     --linux )
-      echo "Building highlight for Linux..."
-      GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o build/highlight-linux-amd64 ./cmd/highlight
-      echo "Binary saved to build/highlight-linux-amd64"
+      build_binary "linux" "amd64" "" "build/highlight-linux-amd64"
       ;;
     --darwin )
-      echo "Building highlight for macOS..."
-      GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o build/highlight-darwin-amd64 ./cmd/highlight
-      echo "Binary saved to build/highlight-darwin-amd64"
+      build_binary "darwin" "amd64" "" "build/highlight-darwin-amd64"
       ;;
     --windows )
-      echo "Building highlight for Windows..."
-      GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o build/highlight-windows-amd64.exe ./cmd/highlight
-      echo "Binary saved to build/highlight-windows-amd64.exe"
+      build_binary "windows" "amd64" "" "build/highlight-windows-amd64.exe"
       ;;
     --arm )
-      echo "Building highlight for ARM Linux..."
-      GOOS=linux GOARCH=arm GOARM=7 go build -ldflags="-s -w" -trimpath -o build/highlight-linux-arm ./cmd/highlight
-      echo "Binary saved to build/highlight-linux-arm"
+      build_binary "linux" "arm" "7" "build/highlight-linux-arm"
+      ;;
+    --arm64 )
+      build_binary "linux" "arm64" "" "build/highlight-linux-arm64"
+      ;;
+    --debug )
+      DEBUG=1
+      echo "Debug mode enabled"
+      ;;
+    --release )
+      DEBUG=0
+      echo "Release mode enabled (optimized build)"
+      ;;
+    --upx )
+      COMPRESS=1
+      echo "UPX compression enabled"
       ;;
     --help )
       show_usage
@@ -70,3 +126,6 @@ while [ "$1" != "" ]; do
 done
 
 echo "Build complete!"
+
+# Make the binary executable
+chmod +x build/highlight*

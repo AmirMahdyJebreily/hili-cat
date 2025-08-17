@@ -11,6 +11,8 @@ A highly optimized, minimal, and scalable command-line syntax highlighting tool 
 - **Line ending support:** Handles both LF and CRLF line endings
 - **Support for stdin:** Can be used in command pipelines
 - **Standard `cat` compatibility:** Supports common cat flags like `-n`, `-b`, `-s`, and `-E`
+- **Multi-language support:** Includes built-in support for Go, Python, JavaScript, JSON, Markdown, XML/HTML, and SQL
+- **Security-focused:** Uses low-level syscall operations for file I/O
 
 ## Installation
 
@@ -53,7 +55,57 @@ highlight -E file.go
 
 The default configuration is stored at `/etc/highlight/config.json`. A sample configuration is provided in the `config` directory.
 
-You can create your own configuration file with custom syntax highlighting rules for different languages.
+You can create your own configuration file with custom syntax highlighting rules for different languages. The configuration file uses JSON format with the following structure:
+
+```json
+{
+  "languages": {
+    "language-name": {
+      "extensions": ["ext1", "ext2"],
+      "rules": [
+        {
+          "name": "rule-name",
+          "pattern": "regex-pattern",
+          "style": "style-name"
+        }
+      ],
+      "styles": {
+        "style-name": "color-name"
+      }
+    }
+  }
+}
+```
+
+Available styles include:
+- Text styles: `bold`, `italic`, `underline`
+- Colors: `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`
+- Bright colors: `brightblack`, `brightred`, `brightgreen`, `brightyellow`, `brightblue`, `brightmagenta`, `brightcyan`, `brightwhite`
+
+## Architecture
+
+The `highlight` tool uses a highly efficient two-goroutine pipeline design:
+
+1. **Reader Goroutine**: Handles file I/O or stdin using low-level syscalls for maximum performance
+2. **Highlighter Goroutine**: Processes the data and applies syntax highlighting using regex-based rules
+
+This pipeline approach allows for efficient streaming of data, even with large files, minimizing memory usage while maintaining high performance.
+
+### Data Flow:
+
+```
+┌─────────┐     ┌─────────────┐     ┌───────────┐
+│ Input   │────▶│ Buffered    │────▶│ Output    │
+│ Source  │     │ Channel     │     │ (Stdout)  │
+└─────────┘     └─────────────┘     └───────────┘
+    │                                    ▲
+    │                                    │
+    ▼                                    │
+┌─────────┐                        ┌─────────────┐
+│ Reader  │                        │ Highlighter │
+│ Goroutine│                        │ Goroutine  │
+└─────────┘                        └─────────────┘
+```
 
 ## Options
 
@@ -65,6 +117,72 @@ You can create your own configuration file with custom syntax highlighting rules
 - `-s, --squeeze-blank`: Suppress repeated empty output lines
 - `-E, --show-ends`: Display $ at end of each line
 - `--help`: Show help message
+
+## Performance Considerations
+
+`highlight` is designed with performance as a primary goal:
+
+- **Buffered I/O**: Uses efficient buffer sizes for optimal read/write performance
+- **Regexp Optimization**: Precompiles regex patterns to minimize CPU usage
+- **Memory Management**: Minimizes allocations to reduce GC overhead
+- **Syscall Usage**: Direct syscall usage for file operations instead of higher-level abstractions
+- **Channel Buffering**: Properly sized channels to prevent blocking in the pipeline
+
+## Examples
+
+### Basic Usage
+
+```bash
+# Highlight a Go file with automatic language detection
+highlight main.go
+```
+
+### Piping from stdin
+
+```bash
+# Pipe the output of git diff into highlight for colored diff output
+git diff | highlight --lang diff
+```
+
+### Use in scripts
+
+```bash
+# Use highlight in a script to show syntax-highlighted output
+#!/bin/bash
+echo "Displaying highlighted code:"
+highlight --lang go main.go
+```
+
+## Running the Demo
+
+The project includes a demo script that showcases the key features of the `highlight` tool:
+
+```bash
+# Make the demo script executable
+chmod +x demo.sh
+
+# Run the demo
+./demo.sh
+```
+
+The demo will:
+1. Build the highlight tool if needed
+2. Show syntax highlighting for Go and JSON files
+3. Demonstrate line numbering
+4. Show how to use highlight with piped input
+5. Display line endings
+6. Demonstrate highlighting multiple files
+
+## Contributing
+
+Contributions are welcome! Here are some areas where help is needed:
+
+1. Adding support for more programming languages
+2. Performance optimizations
+3. Additional formatting options
+4. Bug fixes and test improvements
+
+Please follow the Go coding conventions and ensure that your code passes all tests.
 
 ## License
 
