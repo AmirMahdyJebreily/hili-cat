@@ -2,6 +2,19 @@
 
 A highly optimized, minimal, and scalable command-line syntax highlighting tool written in Go. This program is designed as a more powerful alternative to the `cat` command with syntax highlighting capabilities, specifically for Linux operating systems.
 
+## Documentation
+
+Complete documentation is available in multiple languages:
+
+- [English Documentation](README.md)
+- [Persian Documentation (فارسی)](docs/fa/README.md)
+
+The documentation includes:
+- Installation and usage instructions
+- Configuration guide for adding new languages
+- Architecture and design overview
+- Contribution guidelines
+
 ## Features
 
 - **Highly efficient:** Uses a two-goroutine pipeline architecture for maximum performance
@@ -120,10 +133,10 @@ This pipeline approach allows for efficient streaming of data, even with large f
     │                                    ▲
     │                                    │
     ▼                                    │
-┌─────────┐                        ┌─────────────┐
-│ Reader  │                        │ Highlighter │
-│ Goroutine│                        │ Goroutine  │
-└─────────┘                        └─────────────┘
+┌──────────┐                        ┌─────────────┐
+│ Reader   │                        │ Highlighter │
+│ Goroutine│                        │ Goroutine   │
+└──────────┘                        └─────────────┘
 ```
 
 ## Options
@@ -202,12 +215,12 @@ Contributions are welcome! Here are some areas where help is needed:
 3. Additional formatting options
 4. Bug fixes and test improvements
 
-For detailed information on how to contribute, please read the [Contributing Guide](CONTRIBUTING.md).
+For detailed information on how to contribute, please read the [Contributing Guide](docs/en/CONTRIBUTING.md).
 
 ## Language Configuration
 
-`highlight` is designed to be easily extended with support for additional programming languages.
-To learn how to add support for your favorite language, see the [Language Configuration Guide](CONFIG_GUIDE.md).
+`hili-cat` is designed to be easily extended with support for additional programming languages.
+To learn how to add support for your favorite language, see the [Language Configuration Guide](docs/en/CONFIG_GUIDE.md).
 
 ## Release Process
 
