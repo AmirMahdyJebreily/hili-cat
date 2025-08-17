@@ -9,8 +9,18 @@
           "style": "keyword"
         },
         {
+          "name": "types",
+          "pattern": "\\b(string|int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|float32|float64|bool|byte|rune|error)\\b",
+          "style": "type"
+        },
+        {
           "name": "strings",
           "pattern": "\"[^\"]*\"",
+          "style": "string"
+        },
+        {
+          "name": "raw_strings",
+          "pattern": "`[^`]*`",
           "style": "string"
         },
         {
@@ -20,15 +30,22 @@
         },
         {
           "name": "numbers",
-          "pattern": "\\b\\d+\\b",
+          "pattern": "\\b\\d+(\\.\\d+)?\\b",
           "style": "number"
+        },
+        {
+          "name": "functions",
+          "pattern": "\\bfunc\\s+([A-Za-z0-9_]+)\\s*\\(",
+          "style": "function"
         }
       ],
       "styles": {
         "keyword": "cyan",
+        "type": "brightcyan",
         "string": "green",
         "comment": "yellow",
-        "number": "magenta"
+        "number": "magenta",
+        "function": "brightblue"
       }
     },
     "json": {
@@ -46,20 +63,246 @@
         },
         {
           "name": "numbers",
-          "pattern": ":\\s*\\d+",
+          "pattern": ":\\s*-?\\d+(\\.\\d+)?([eE][+-]?\\d+)?",
           "style": "number"
         },
         {
           "name": "booleans",
           "pattern": ":\\s*(true|false|null)",
           "style": "boolean"
+        },
+        {
+          "name": "brackets",
+          "pattern": "[\\{\\}\\[\\]]",
+          "style": "bracket"
         }
       ],
       "styles": {
         "key": "cyan",
         "string": "green",
         "number": "magenta",
-        "boolean": "yellow"
+        "boolean": "yellow",
+        "bracket": "brightwhite"
+      }
+    },
+    "python": {
+      "extensions": ["py"],
+      "rules": [
+        {
+          "name": "keywords",
+          "pattern": "\\b(and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)\\b",
+          "style": "keyword"
+        },
+        {
+          "name": "builtins",
+          "pattern": "\\b(True|False|None|NotImplemented|Ellipsis|__debug__|abs|all|any|ascii|bin|bool|breakpoint|bytearray|bytes|callable|chr|classmethod|compile|complex|delattr|dict|dir|divmod|enumerate|eval|exec|filter|float|format|frozenset|getattr|globals|hasattr|hash|help|hex|id|input|int|isinstance|issubclass|iter|len|list|locals|map|max|memoryview|min|next|object|oct|open|ord|pow|print|property|range|repr|reversed|round|set|setattr|slice|sorted|staticmethod|str|sum|super|tuple|type|vars|zip)\\b",
+          "style": "builtin"
+        },
+        {
+          "name": "strings_double",
+          "pattern": "\"[^\"]*\"",
+          "style": "string"
+        },
+        {
+          "name": "strings_single",
+          "pattern": "'[^']*'",
+          "style": "string"
+        },
+        {
+          "name": "comments",
+          "pattern": "#.*",
+          "style": "comment"
+        },
+        {
+          "name": "decorators",
+          "pattern": "@\\w+",
+          "style": "decorator"
+        },
+        {
+          "name": "numbers",
+          "pattern": "\\b\\d+(\\.\\d+)?\\b",
+          "style": "number"
+        }
+      ],
+      "styles": {
+        "keyword": "cyan",
+        "builtin": "brightcyan",
+        "string": "green",
+        "comment": "yellow",
+        "decorator": "brightmagenta",
+        "number": "magenta"
+      }
+    },
+    "javascript": {
+      "extensions": ["js", "jsx", "ts", "tsx"],
+      "rules": [
+        {
+          "name": "keywords",
+          "pattern": "\\b(await|break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|from|function|if|import|in|instanceof|let|new|of|return|super|switch|this|throw|try|typeof|var|void|while|with|yield)\\b",
+          "style": "keyword"
+        },
+        {
+          "name": "strings",
+          "pattern": "\"[^\"]*\"|'[^']*'|`[^`]*`",
+          "style": "string"
+        },
+        {
+          "name": "comments",
+          "pattern": "//.*|/\\*[\\s\\S]*?\\*/",
+          "style": "comment"
+        },
+        {
+          "name": "numbers",
+          "pattern": "\\b\\d+(\\.\\d+)?\\b",
+          "style": "number"
+        },
+        {
+          "name": "regex",
+          "pattern": "/[^/]+/[gimsuy]*",
+          "style": "regex"
+        },
+        {
+          "name": "jsx_tags",
+          "pattern": "</?[A-Za-z][A-Za-z0-9]*",
+          "style": "tag"
+        },
+        {
+          "name": "jsx_attributes",
+          "pattern": "\\b([A-Za-z][A-Za-z0-9]*)=",
+          "style": "attribute"
+        }
+      ],
+      "styles": {
+        "keyword": "cyan",
+        "string": "green",
+        "comment": "yellow",
+        "number": "magenta",
+        "regex": "red",
+        "tag": "brightblue",
+        "attribute": "brightcyan"
+      }
+    },
+    "markdown": {
+      "extensions": ["md", "markdown"],
+      "rules": [
+        {
+          "name": "headers",
+          "pattern": "^#{1,6}\\s.*$",
+          "style": "header"
+        },
+        {
+          "name": "bold",
+          "pattern": "\\*\\*[^*]+\\*\\*|__[^_]+__",
+          "style": "bold"
+        },
+        {
+          "name": "italic",
+          "pattern": "\\*[^*]+\\*|_[^_]+_",
+          "style": "italic"
+        },
+        {
+          "name": "links",
+          "pattern": "\\[([^\\]]+)\\]\\([^)]+\\)",
+          "style": "link"
+        },
+        {
+          "name": "code",
+          "pattern": "`[^`]+`",
+          "style": "code"
+        },
+        {
+          "name": "lists",
+          "pattern": "^\\s*[*+-]\\s|^\\s*\\d+\\.\\s",
+          "style": "list"
+        },
+        {
+          "name": "blockquote",
+          "pattern": "^\\s*>.*$",
+          "style": "quote"
+        }
+      ],
+      "styles": {
+        "header": "brightblue",
+        "bold": "bold",
+        "italic": "italic",
+        "link": "cyan",
+        "code": "magenta",
+        "list": "yellow",
+        "quote": "green"
+      }
+    },
+    "xml": {
+      "extensions": ["xml", "html", "htm", "svg"],
+      "rules": [
+        {
+          "name": "tags",
+          "pattern": "</?[^>]+>",
+          "style": "tag"
+        },
+        {
+          "name": "attributes",
+          "pattern": "\\s([a-zA-Z-:]+)=",
+          "style": "attribute"
+        },
+        {
+          "name": "strings",
+          "pattern": "\"[^\"]*\"|'[^']*'",
+          "style": "string"
+        },
+        {
+          "name": "comments",
+          "pattern": "<!--[\\s\\S]*?-->",
+          "style": "comment"
+        },
+        {
+          "name": "doctype",
+          "pattern": "<!DOCTYPE[^>]+>",
+          "style": "doctype"
+        }
+      ],
+      "styles": {
+        "tag": "cyan",
+        "attribute": "yellow",
+        "string": "green",
+        "comment": "brightblack",
+        "doctype": "magenta"
+      }
+    },
+    "sql": {
+      "extensions": ["sql"],
+      "rules": [
+        {
+          "name": "keywords",
+          "pattern": "(?i)\\b(SELECT|FROM|WHERE|AND|OR|JOIN|LEFT|RIGHT|INNER|OUTER|FULL|ON|GROUP BY|ORDER BY|HAVING|INSERT|UPDATE|DELETE|SET|VALUES|CREATE|ALTER|DROP|TABLE|INDEX|VIEW|INTO|AS|DISTINCT|COUNT|SUM|AVG|MIN|MAX|CASE|WHEN|THEN|ELSE|END|IS|NULL|NOT|IN|LIKE|BETWEEN)\\b",
+          "style": "keyword"
+        },
+        {
+          "name": "strings",
+          "pattern": "'[^']*'",
+          "style": "string"
+        },
+        {
+          "name": "comments",
+          "pattern": "--.*|/\\*[\\s\\S]*?\\*/",
+          "style": "comment"
+        },
+        {
+          "name": "numbers",
+          "pattern": "\\b\\d+(\\.\\d+)?\\b",
+          "style": "number"
+        },
+        {
+          "name": "functions",
+          "pattern": "\\b[A-Za-z0-9_]+\\(",
+          "style": "function"
+        }
+      ],
+      "styles": {
+        "keyword": "cyan",
+        "string": "green",
+        "comment": "brightblack",
+        "number": "magenta",
+        "function": "yellow"
       }
     }
   }

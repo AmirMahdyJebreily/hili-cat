@@ -1,0 +1,20 @@
+{
+  "name": "highlight-demo",
+  "version": "1.0.0",
+  "description": "Configuration example for highlight tool",
+  "settings": {
+    "theme": "dark",
+    "lineNumbers": true,
+    "tabSize": 2
+  },
+  "languages": [
+    "go",
+    "json",
+    "python"
+  ],
+  "features": {
+    "syntaxHighlighting": true,
+    "lineWrapping": false,
+    "autoIndent": true
+  }
+}
