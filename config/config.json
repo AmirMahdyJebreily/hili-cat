@@ -1,0 +1,66 @@
+{
+  "languages": {
+    "go": {
+      "extensions": ["go"],
+      "rules": [
+        {
+          "name": "keywords",
+          "pattern": "\\b(func|package|import|var|const|type|struct|interface|map|chan|go|defer|if|else|switch|case|for|range|return|break|continue)\\b",
+          "style": "keyword"
+        },
+        {
+          "name": "strings",
+          "pattern": "\"[^\"]*\"",
+          "style": "string"
+        },
+        {
+          "name": "comments",
+          "pattern": "//.*|/\\*[\\s\\S]*?\\*/",
+          "style": "comment"
+        },
+        {
+          "name": "numbers",
+          "pattern": "\\b\\d+\\b",
+          "style": "number"
+        }
+      ],
+      "styles": {
+        "keyword": "cyan",
+        "string": "green",
+        "comment": "yellow",
+        "number": "magenta"
+      }
+    },
+    "json": {
+      "extensions": ["json"],
+      "rules": [
+        {
+          "name": "keys",
+          "pattern": "\"[^\"]*\"\\s*:",
+          "style": "key"
+        },
+        {
+          "name": "strings",
+          "pattern": ":\\s*\"[^\"]*\"",
+          "style": "string"
+        },
+        {
+          "name": "numbers",
+          "pattern": ":\\s*\\d+",
+          "style": "number"
+        },
+        {
+          "name": "booleans",
+          "pattern": ":\\s*(true|false|null)",
+          "style": "boolean"
+        }
+      ],
+      "styles": {
+        "key": "cyan",
+        "string": "green",
+        "number": "magenta",
+        "boolean": "yellow"
+      }
+    }
+  }
+}
