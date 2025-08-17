@@ -13,6 +13,7 @@ A highly optimized, minimal, and scalable command-line syntax highlighting tool 
 - **Standard `cat` compatibility:** Supports common cat flags like `-n`, `-b`, `-s`, and `-E`
 - **Multi-language support:** Includes built-in support for Go, Python, JavaScript, JSON, Markdown, XML/HTML, and SQL
 - **Security-focused:** Uses low-level syscall operations for file I/O
+- **Integrated paging:** Use `--less` flag to view large files with the `less` pager
 
 ## Installation
 
@@ -186,7 +187,19 @@ Contributions are welcome! Here are some areas where help is needed:
 3. Additional formatting options
 4. Bug fixes and test improvements
 
-Please follow the Go coding conventions and ensure that your code passes all tests.
+For detailed information on how to contribute, please read the [Contributing Guide](CONTRIBUTING.md).
+
+## Language Configuration
+
+`highlight` is designed to be easily extended with support for additional programming languages.
+To learn how to add support for your favorite language, see the [Language Configuration Guide](CONFIG_GUIDE.md).
+
+## Release Process
+
+The project uses GitHub Actions to automate builds:
+- Tag `pre-release0.0.1` and any version with `v*` prefix triggers automatic builds
+- Linux builds are automatically created and attached to GitHub releases
+- See the workflow file in `.github/workflows/linux-build.yml` for details
 
 ## License
 
