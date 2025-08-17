@@ -49,6 +49,9 @@ highlight -s file.go
 
 # Show line endings with $ marker (like cat -E)
 highlight -E file.go
+
+# View highlighted file using less for pagination
+highlight --less file.go
 ```
 
 ## Configuration
@@ -116,6 +119,7 @@ This pipeline approach allows for efficient streaming of data, even with large f
 - `-b, --number-nonblank`: Number non-blank output lines
 - `-s, --squeeze-blank`: Suppress repeated empty output lines
 - `-E, --show-ends`: Display $ at end of each line
+- `--less, --pager`: Pipe output to `less -R` command for paged viewing
 - `--help`: Show help message
 
 ## Performance Considerations

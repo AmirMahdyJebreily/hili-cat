@@ -50,4 +50,9 @@ echo -e "\033[1m6. Highlighting multiple files:\033[0m"
 $HIGHLIGHT examples/demo.go examples/demo.json
 echo
 
+# Demo 7: Using less for pagination (will be skipped in automated demos)
+echo -e "\033[1m7. Using less for pagination (run manually):\033[0m"
+echo -e "   Command to try: $HIGHLIGHT --less examples/demo.go"
+echo
+
 echo -e "\033[1m=== Demo Complete ===\033[0m"

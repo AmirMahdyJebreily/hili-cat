@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"os"
+	"os/exec"
 	"sync"
 
 	"github.com/AmirMahdyJebreily/hili-cat/internal/config"
@@ -27,6 +29,7 @@ func printUsage() {
 	fmt.Fprintf(os.Stderr, "  highlight file.go                    # Highlight a Go file\n")
 	fmt.Fprintf(os.Stderr, "  cat file.json | highlight --lang json # Highlight JSON from stdin\n")
 	fmt.Fprintf(os.Stderr, "  highlight --config /path/to/config.json file.py # Use custom config\n")
+	fmt.Fprintf(os.Stderr, "  highlight --less large_file.go       # View highlighted file with pagination\n")
 }
 
 func main() {
@@ -38,6 +41,7 @@ func main() {
 	numberNonBlank := flag.Bool("b", false, "Number non-blank output lines")
 	squeezeBlank := flag.Bool("s", false, "Suppress repeated empty output lines")
 	showEnds := flag.Bool("E", false, "Display $ at end of each line")
+	useLess := flag.Bool("less", false, "Pipe output to 'less -R' command for paged viewing")
 	help := flag.Bool("help", false, "Show help message")
 
 	// Add long-form flags
@@ -45,6 +49,7 @@ func main() {
 	flag.BoolVar(numberNonBlank, "number-nonblank", *numberNonBlank, "Number non-blank output lines")
 	flag.BoolVar(squeezeBlank, "squeeze-blank", *squeezeBlank, "Suppress repeated empty output lines")
 	flag.BoolVar(showEnds, "show-ends", *showEnds, "Display $ at end of each line")
+	flag.BoolVar(useLess, "pager", *useLess, "Pipe output to 'less -R' command for paged viewing")
 
 	flag.Parse()
 
@@ -81,14 +86,14 @@ func main() {
 
 	// Determine if we're reading from stdin or files
 	if len(args) == 0 {
-		processStdin(reader, cfg, *lang, *lineEnding, opts)
+		processStdin(reader, cfg, *lang, *lineEnding, opts, *useLess)
 	} else {
-		processFiles(reader, cfg, args, *lang, *lineEnding, opts)
+		processFiles(reader, cfg, args, *lang, *lineEnding, opts, *useLess)
 	}
 }
 
 // processStdin handles input from standard input
-func processStdin(reader *fileio.Reader, cfg config.Config, lang, lineEnding string, opts highlighter.Options) {
+func processStdin(reader *fileio.Reader, cfg config.Config, lang, lineEnding string, opts highlighter.Options, useLess bool) {
 	// Reading from stdin
 	if lang == "" {
 		fmt.Fprintln(os.Stderr, "Error: --lang is required when reading from stdin")
@@ -143,14 +148,14 @@ func processStdin(reader *fileio.Reader, cfg config.Config, lang, lineEnding str
 
 	// Launch processor goroutine
 	wg.Add(1)
-	go processOutput(dataCh, h, &wg)
+	go processOutput(dataCh, h, &wg, useLess)
 
 	// Wait for both goroutines to complete
 	wg.Wait()
 }
 
 // processFiles handles input from multiple files
-func processFiles(reader *fileio.Reader, cfg config.Config, files []string, langOverride, lineEnding string, opts highlighter.Options) {
+func processFiles(reader *fileio.Reader, cfg config.Config, files []string, langOverride, lineEnding string, opts highlighter.Options, useLess bool) {
 	for _, filePath := range files {
 		// Determine language from file extension if not explicitly provided
 		fileLang := langOverride
@@ -208,7 +213,7 @@ func processFiles(reader *fileio.Reader, cfg config.Config, files []string, lang
 
 		// Launch processor goroutine
 		wg.Add(1)
-		go processOutput(dataCh, h, &wg)
+		go processOutput(dataCh, h, &wg, useLess)
 
 		// Wait for both goroutines to complete
 		wg.Wait()
@@ -216,12 +221,57 @@ func processFiles(reader *fileio.Reader, cfg config.Config, files []string, lang
 }
 
 // processOutput handles the highlighting and output of data
-func processOutput(dataCh <-chan []byte, h *highlighter.Highlighter, wg *sync.WaitGroup) {
+func processOutput(dataCh <-chan []byte, h *highlighter.Highlighter, wg *sync.WaitGroup, useLess bool) {
 	defer wg.Done()
 
-	for data := range dataCh {
-		// Process and output the data
-		fmt.Print(h.ProcessContent(data))
+	if useLess {
+		// Start less command with -R flag to interpret ANSI color codes
+		cmd := exec.Command("less", "-R")
+
+		// Get pipes for stdin and stdout
+		stdin, err := cmd.StdinPipe()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: Failed to start less: %v\n", err)
+			// Fallback to regular output if less fails
+			for data := range dataCh {
+				fmt.Print(h.ProcessContent(data))
+			}
+			return
+		}
+
+		// Set output to terminal
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		// Start the command
+		if err := cmd.Start(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: Failed to start less: %v\n", err)
+			// Fallback to regular output if less fails
+			for data := range dataCh {
+				fmt.Print(h.ProcessContent(data))
+			}
+			return
+		}
+
+		// Process data and write to less
+		for data := range dataCh {
+			processed := h.ProcessContent(data)
+			_, err := io.WriteString(stdin, processed)
+			if err != nil {
+				break
+			}
+		}
+
+		// Close stdin to signal EOF to less
+		stdin.Close()
+
+		// Wait for less to exit
+		cmd.Wait()
+	} else {
+		// Regular output to stdout
+		for data := range dataCh {
+			fmt.Print(h.ProcessContent(data))
+		}
 	}
 }
 
