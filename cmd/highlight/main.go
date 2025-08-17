@@ -1,0 +1,248 @@
+package main
+
+import (
+	"bufio"
+	"flag"
+	"fmt"
+	"os"
+	"sync"
+
+	"github.com/AmirMahdyJebreily/hili-cat/internal/config"
+	"github.com/AmirMahdyJebreily/hili-cat/internal/highlighter"
+	fileio "github.com/AmirMahdyJebreily/hili-cat/internal/io" // Renamed to avoid conflict with standard io
+)
+
+// Default buffer sizes for performance optimization
+const (
+	defaultBufferSize = 4096
+	channelBufferSize = 1000
+)
+
+// printUsage prints the program's usage information
+func printUsage() {
+	fmt.Fprintf(os.Stderr, "Usage: highlight [options] [file...]\n\n")
+	fmt.Fprintf(os.Stderr, "Options:\n")
+	flag.PrintDefaults()
+	fmt.Fprintf(os.Stderr, "\nExamples:\n")
+	fmt.Fprintf(os.Stderr, "  highlight file.go                    # Highlight a Go file\n")
+	fmt.Fprintf(os.Stderr, "  cat file.json | highlight --lang json # Highlight JSON from stdin\n")
+	fmt.Fprintf(os.Stderr, "  highlight --config /path/to/config.json file.py # Use custom config\n")
+}
+
+func main() {
+	// Parse command-line flags
+	configPath := flag.String("config", config.DefaultConfigPath, "Path to the configuration file")
+	lang := flag.String("lang", "", "Language for syntax highlighting (required when reading from stdin)")
+	lineEnding := flag.String("line-ending", "auto", "Line ending to use (auto, lf, crlf)")
+	numberLines := flag.Bool("n", false, "Number all output lines")
+	numberNonBlank := flag.Bool("b", false, "Number non-blank output lines")
+	squeezeBlank := flag.Bool("s", false, "Suppress repeated empty output lines")
+	showEnds := flag.Bool("E", false, "Display $ at end of each line")
+	help := flag.Bool("help", false, "Show help message")
+
+	// Add long-form flags
+	flag.BoolVar(numberLines, "number", *numberLines, "Number all output lines")
+	flag.BoolVar(numberNonBlank, "number-nonblank", *numberNonBlank, "Number non-blank output lines")
+	flag.BoolVar(squeezeBlank, "squeeze-blank", *squeezeBlank, "Suppress repeated empty output lines")
+	flag.BoolVar(showEnds, "show-ends", *showEnds, "Display $ at end of each line")
+
+	flag.Parse()
+
+	if *help {
+		printUsage()
+		return
+	}
+
+	// Ensure config file exists (create default if not)
+	if err := config.EnsureExists(*configPath); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
+	}
+
+	// Load the configuration
+	cfg, err := config.Load(*configPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Initialize the reader
+	reader := fileio.NewReader(defaultBufferSize)
+
+	// Get the file arguments
+	args := flag.Args()
+
+	// Create highlighter options
+	opts := highlighter.Options{
+		NumberLines:    *numberLines,
+		NumberNonBlank: *numberNonBlank,
+		SqueezeBlank:   *squeezeBlank,
+		ShowEnds:       *showEnds,
+	}
+
+	// Determine if we're reading from stdin or files
+	if len(args) == 0 {
+		processStdin(reader, cfg, *lang, *lineEnding, opts)
+	} else {
+		processFiles(reader, cfg, args, *lang, *lineEnding, opts)
+	}
+}
+
+// processStdin handles input from standard input
+func processStdin(reader *fileio.Reader, cfg config.Config, lang, lineEnding string, opts highlighter.Options) {
+	// Reading from stdin
+	if lang == "" {
+		fmt.Fprintln(os.Stderr, "Error: --lang is required when reading from stdin")
+		printUsage()
+		os.Exit(1)
+	}
+
+	// Detect or set line ending
+	var detectedLineEnding string
+	if lineEnding == "auto" {
+		// Try to detect from stdin
+		bufReader := bufio.NewReader(os.Stdin)
+		buf := make([]byte, 1024)
+		n, _ := bufReader.Read(buf)
+		if n > 0 {
+			detectedLineEnding = fileio.DetectLineEnding(buf[:n])
+		} else {
+			detectedLineEnding = highlighter.LF // Default to LF if no data
+		}
+
+		// Need to reset stdin
+		if n > 0 {
+			// This is a simplified approach; in a real application,
+			// we would need a more robust way to peek at stdin without consuming it
+			fmt.Fprintf(os.Stderr, "Warning: Line ending detection consumed some input data\n")
+			detectedLineEnding = highlighter.LF // Default to LF as fallback
+		}
+	} else if lineEnding == "crlf" {
+		detectedLineEnding = highlighter.CRLF
+	} else {
+		detectedLineEnding = highlighter.LF
+	}
+
+	// Create highlighter
+	h, err := highlighter.NewHighlighter(convertConfig(cfg), lang, detectedLineEnding, opts)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Set up the pipeline
+	dataCh := make(chan []byte, channelBufferSize)
+	var wg sync.WaitGroup
+
+	wg.Add(2)
+	go reader.ProcessFile("", dataCh, &wg)
+	go processOutput(dataCh, h, &wg)
+
+	// Wait for both goroutines to complete
+	waitForCompletion(&wg, dataCh)
+}
+
+// processFiles handles input from multiple files
+func processFiles(reader *fileio.Reader, cfg config.Config, files []string, langOverride, lineEnding string, opts highlighter.Options) {
+	for _, filePath := range files {
+		// Determine language from file extension if not explicitly provided
+		fileLang := langOverride
+		if fileLang == "" {
+			fileLang = config.DetectLanguage(cfg, filePath)
+			if fileLang == "" {
+				fmt.Fprintf(os.Stderr, "Error: Could not determine language for %s. Use --lang flag.\n", filePath)
+				continue
+			}
+		}
+
+		// Determine line ending
+		var detectedLineEnding string
+		if lineEnding == "auto" {
+			// Open file to detect line ending
+			file, err := fileio.OpenFile(filePath)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+				continue
+			}
+
+			buf := make([]byte, 1024)
+			n, _ := file.Read(buf)
+			file.Close()
+
+			if n > 0 {
+				detectedLineEnding = fileio.DetectLineEnding(buf[:n])
+			} else {
+				detectedLineEnding = highlighter.LF // Default to LF if file is empty
+			}
+		} else if lineEnding == "crlf" {
+			detectedLineEnding = highlighter.CRLF
+		} else {
+			detectedLineEnding = highlighter.LF
+		}
+
+		// Create highlighter
+		h, err := highlighter.NewHighlighter(convertConfig(cfg), fileLang, detectedLineEnding, opts)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			continue
+		}
+
+		// Set up the pipeline
+		dataCh := make(chan []byte, channelBufferSize)
+		var wg sync.WaitGroup
+
+		wg.Add(2)
+		go reader.ProcessFile(filePath, dataCh, &wg)
+		go processOutput(dataCh, h, &wg)
+
+		// Wait for both goroutines to complete
+		waitForCompletion(&wg, dataCh)
+	}
+}
+
+// processOutput handles the highlighting and output of data
+func processOutput(dataCh <-chan []byte, h *highlighter.Highlighter, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	for data := range dataCh {
+		// Process and output the data
+		fmt.Print(h.ProcessContent(data))
+	}
+}
+
+// waitForCompletion waits for all goroutines to finish and closes the channel
+func waitForCompletion(wg *sync.WaitGroup, dataCh chan []byte) {
+	// Wait for reader goroutine to finish, then close the channel
+	go func() {
+		wg.Wait()
+		close(dataCh)
+	}()
+
+	// Wait for both goroutines to complete
+	wg.Wait()
+}
+
+// convertConfig converts config.Config to highlighter.Config
+func convertConfig(cfg config.Config) highlighter.Config {
+	languages := make(map[string]highlighter.Language)
+	
+	for lang, language := range cfg.Languages {
+		rules := make([]highlighter.HighlightRule, len(language.Rules))
+		for i, rule := range language.Rules {
+			rules[i] = highlighter.HighlightRule{
+				Name:    rule.Name,
+				Pattern: rule.Pattern,
+				Style:   rule.Style,
+			}
+		}
+		
+		languages[lang] = highlighter.Language{
+			Extensions: language.Extensions,
+			Rules:      rules,
+			Styles:     language.Styles,
+		}
+	}
+	
+	return highlighter.Config{
+		Languages: languages,
+	}
+}
