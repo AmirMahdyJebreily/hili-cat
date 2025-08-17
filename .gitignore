@@ -32,3 +32,4 @@ go.work.sum
 # .vscode/
 .github/instructions/hili-cat-instruction.instructions.md
 highlight-linux-amd64
+build/highlight
