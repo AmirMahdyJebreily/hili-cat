@@ -145,7 +145,7 @@ func TestProcessOutput(t *testing.T) {
 	// Run processOutput in a goroutine
 	done := make(chan struct{})
 	go func() {
-		processOutput(dataCh, mockHighlighter, nil)
+		processOutput(dataCh, mockHighlighter, nil, false)
 		close(done)
 	}()
 
