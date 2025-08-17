@@ -178,7 +178,7 @@ func TestProcessOutput(t *testing.T) {
 		if err != nil {
 			t.Fatal("Failed to create test highlighter:", err)
 		}
-		
+
 		// Capture stdout
 		oldStdout := os.Stdout
 		r, w, _ := os.Pipe()
@@ -217,7 +217,7 @@ func TestProcessOutput(t *testing.T) {
 		if os.Getenv("SKIP_LESS_TEST") != "" {
 			t.Skip("Skipping test requiring less command")
 		}
-		
+
 		// Skip on systems without less command
 		_, err := exec.LookPath("less")
 		if err != nil {
