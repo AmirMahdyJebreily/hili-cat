@@ -224,7 +224,7 @@ func waitForCompletion(wg *sync.WaitGroup, dataCh chan []byte) {
 // convertConfig converts config.Config to highlighter.Config
 func convertConfig(cfg config.Config) highlighter.Config {
 	languages := make(map[string]highlighter.Language)
-	
+
 	for lang, language := range cfg.Languages {
 		rules := make([]highlighter.HighlightRule, len(language.Rules))
 		for i, rule := range language.Rules {
@@ -234,14 +234,14 @@ func convertConfig(cfg config.Config) highlighter.Config {
 				Style:   rule.Style,
 			}
 		}
-		
+
 		languages[lang] = highlighter.Language{
 			Extensions: language.Extensions,
 			Rules:      rules,
 			Styles:     language.Styles,
 		}
 	}
-	
+
 	return highlighter.Config{
 		Languages: languages,
 	}
