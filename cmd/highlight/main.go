@@ -133,12 +133,20 @@ func processStdin(reader *fileio.Reader, cfg config.Config, lang, lineEnding str
 	dataCh := make(chan []byte, channelBufferSize)
 	var wg sync.WaitGroup
 
-	wg.Add(2)
-	go reader.ProcessFile("", dataCh, &wg)
+	// Launch reader goroutine
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		reader.ProcessFile("", dataCh, nil)
+		close(dataCh) // Important: close channel when reader is done
+	}()
+
+	// Launch processor goroutine
+	wg.Add(1)
 	go processOutput(dataCh, h, &wg)
 
 	// Wait for both goroutines to complete
-	waitForCompletion(&wg, dataCh)
+	wg.Wait()
 }
 
 // processFiles handles input from multiple files
@@ -190,12 +198,20 @@ func processFiles(reader *fileio.Reader, cfg config.Config, files []string, lang
 		dataCh := make(chan []byte, channelBufferSize)
 		var wg sync.WaitGroup
 
-		wg.Add(2)
-		go reader.ProcessFile(filePath, dataCh, &wg)
+		// Launch reader goroutine
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			reader.ProcessFile(filePath, dataCh, nil)
+			close(dataCh) // Important: close channel when reader is done
+		}()
+
+		// Launch processor goroutine
+		wg.Add(1)
 		go processOutput(dataCh, h, &wg)
 
 		// Wait for both goroutines to complete
-		waitForCompletion(&wg, dataCh)
+		wg.Wait()
 	}
 }
 
@@ -209,17 +225,8 @@ func processOutput(dataCh <-chan []byte, h *highlighter.Highlighter, wg *sync.Wa
 	}
 }
 
-// waitForCompletion waits for all goroutines to finish and closes the channel
-func waitForCompletion(wg *sync.WaitGroup, dataCh chan []byte) {
-	// Wait for reader goroutine to finish, then close the channel
-	go func() {
-		wg.Wait()
-		close(dataCh)
-	}()
-
-	// Wait for both goroutines to complete
-	wg.Wait()
-}
+// Note: waitForCompletion function has been removed as it's no longer needed
+// The channel closing is now handled directly in the reader goroutines
 
 // convertConfig converts config.Config to highlighter.Config
 func convertConfig(cfg config.Config) highlighter.Config {

@@ -37,7 +37,9 @@ func OpenFile(path string) (*os.File, error) {
 
 // ProcessFile reads from a file or stdin and sends data to the channel
 func (r *Reader) ProcessFile(filePath string, dataCh chan<- []byte, wg *sync.WaitGroup) {
-	defer wg.Done()
+	if wg != nil {
+		defer wg.Done()
+	}
 
 	var reader io.Reader
 

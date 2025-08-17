@@ -31,3 +31,4 @@ go.work.sum
 # .idea/
 # .vscode/
 .github/instructions/hili-cat-instruction.instructions.md
+highlight-linux-amd64
