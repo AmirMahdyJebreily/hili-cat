@@ -3,6 +3,7 @@ package highlighter
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -79,6 +80,13 @@ type Options struct {
 	NumberNonBlank bool
 	SqueezeBlank   bool
 	ShowEnds       bool
+}
+
+// Token represents a matched section of text with styling information
+type Token struct {
+	start int
+	end   int
+	style string
 }
 
 // NewHighlighter creates and initializes a new Highlighter
@@ -165,12 +173,6 @@ func (h *Highlighter) ProcessContent(data []byte) string {
 
 // highlightLine applies syntax highlighting to a single line
 func (h *Highlighter) highlightLine(line string) string {
-	type Token struct {
-		start int
-		end   int
-		style string
-	}
-
 	var tokens []Token
 
 	// Find all matches for all rules
@@ -194,10 +196,9 @@ func (h *Highlighter) highlightLine(line string) string {
 	if len(tokens) == 0 {
 		return line
 	}
-
-	// Sort tokens by start position for non-overlapping highlighting
-	// In production, we'd implement a proper sort here
-
+	// Sort tokens by start position and handle overlapping tokens
+	h.sortAndFilterTokens(&tokens)
+	
 	var result strings.Builder
 	lastPos := 0
 
@@ -225,6 +226,37 @@ func (h *Highlighter) highlightLine(line string) string {
 	}
 
 	return result.String()
+}
+
+// sortAndFilterTokens sorts tokens by start position and resolves overlapping tokens
+func (h *Highlighter) sortAndFilterTokens(tokens *[]Token) {
+	if len(*tokens) <= 1 {
+		return
+	}
+	
+	// First sort tokens by start position
+	sort.Slice(*tokens, func(i, j int) bool {
+		return (*tokens)[i].start < (*tokens)[j].start
+	})
+	
+	// Then handle overlapping tokens (keep the first one in case of overlap)
+	var filtered []Token
+	lastEnd := -1
+	
+	for _, token := range *tokens {
+		// Skip completely overlapped tokens
+		if lastEnd >= token.end {
+			continue
+		}
+		
+		// Include token that starts after the last end or has partial overlap
+		if token.start >= lastEnd {
+			filtered = append(filtered, token)
+			lastEnd = token.end
+		}
+	}
+	
+	*tokens = filtered
 }
 
 // ansiStyle converts a style name to its ANSI escape code
