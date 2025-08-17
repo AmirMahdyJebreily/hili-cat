@@ -8,26 +8,26 @@ import (
 
 // ANSI color codes
 const (
-	Reset      = "\033[0m"
-	Bold       = "\033[1m"
-	Italic     = "\033[3m"
-	Underline  = "\033[4m"
-	Black      = "\033[30m"
-	Red        = "\033[31m"
-	Green      = "\033[32m"
-	Yellow     = "\033[33m"
-	Blue       = "\033[34m"
-	Magenta    = "\033[35m"
-	Cyan       = "\033[36m"
-	White      = "\033[37m"
-	BgBlack    = "\033[40m"
-	BgRed      = "\033[41m"
-	BgGreen    = "\033[42m"
-	BgYellow   = "\033[43m"
-	BgBlue     = "\033[44m"
-	BgMagenta  = "\033[45m"
-	BgCyan     = "\033[46m"
-	BgWhite    = "\033[47m"
+	Reset     = "\033[0m"
+	Bold      = "\033[1m"
+	Italic    = "\033[3m"
+	Underline = "\033[4m"
+	Black     = "\033[30m"
+	Red       = "\033[31m"
+	Green     = "\033[32m"
+	Yellow    = "\033[33m"
+	Blue      = "\033[34m"
+	Magenta   = "\033[35m"
+	Cyan      = "\033[36m"
+	White     = "\033[37m"
+	BgBlack   = "\033[40m"
+	BgRed     = "\033[41m"
+	BgGreen   = "\033[42m"
+	BgYellow  = "\033[43m"
+	BgBlue    = "\033[44m"
+	BgMagenta = "\033[45m"
+	BgCyan    = "\033[46m"
+	BgWhite   = "\033[47m"
 )
 
 // Line ending constants
@@ -75,10 +75,10 @@ type Highlighter struct {
 
 // Options contains settings for the highlighter
 type Options struct {
-	NumberLines      bool
-	NumberNonBlank   bool
-	SqueezeBlank     bool
-	ShowEnds         bool
+	NumberLines    bool
+	NumberNonBlank bool
+	SqueezeBlank   bool
+	ShowEnds       bool
 }
 
 // NewHighlighter creates and initializes a new Highlighter
@@ -129,14 +129,14 @@ func (h *Highlighter) ProcessContent(data []byte) string {
 		}
 
 		isBlankLine := len(strings.TrimSpace(line)) == 0
-		
+
 		// Handle squeeze blank option
 		if h.options.SqueezeBlank && isBlankLine && lastLineWasBlank {
 			continue
 		}
-		
+
 		lastLineWasBlank = isBlankLine
-		
+
 		// Add line number if required
 		if h.options.NumberLines || (h.options.NumberNonBlank && !isBlankLine) {
 			h.lineNum++
@@ -146,20 +146,20 @@ func (h *Highlighter) ProcessContent(data []byte) string {
 				lineBuffer.WriteString(fmt.Sprintf("%5d  ", h.lineNum))
 			}
 		}
-		
+
 		// Add highlighted content
 		lineBuffer.WriteString(h.highlightLine(line))
-		
+
 		// Add end marker if requested
 		if h.options.ShowEnds {
 			lineBuffer.WriteString("$")
 		}
-		
+
 		buffer.WriteString(lineBuffer.String())
 		buffer.WriteString(h.lineEnding)
 		lineBuffer.Reset()
 	}
-	
+
 	return buffer.String()
 }
 
@@ -194,10 +194,10 @@ func (h *Highlighter) highlightLine(line string) string {
 	if len(tokens) == 0 {
 		return line
 	}
-	
+
 	// Sort tokens by start position for non-overlapping highlighting
 	// In production, we'd implement a proper sort here
-	
+
 	var result strings.Builder
 	lastPos := 0
 

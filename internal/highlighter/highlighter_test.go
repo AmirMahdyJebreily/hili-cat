@@ -30,12 +30,12 @@ func TestHighlightLine(t *testing.T) {
 	// Test highlighting
 	line := `func main() { fmt.Println("hello world") }`
 	highlighted := h.highlightLine(line)
-	
+
 	// Basic verification that highlighting was applied
 	if highlighted == line {
 		t.Error("No highlighting was applied")
 	}
-	
+
 	// Check that ANSI codes are present
 	if !strings.Contains(highlighted, "\033[") {
 		t.Error("No ANSI codes found in highlighted output")
@@ -60,15 +60,15 @@ func TestProcessContent(t *testing.T) {
 			},
 		},
 	}
-	
+
 	input := []byte("package main\n\nfunc main() {}\n")
 	output := h.ProcessContent(input)
-	
+
 	// Check that line numbers were added
 	if !strings.Contains(output, "    1") {
 		t.Error("Line numbers not added as expected")
 	}
-	
+
 	// Check that the right number of lines are in the output
 	lines := strings.Split(output, "\n")
 	// We expect 3 lines of content plus one empty line after splitting
@@ -79,7 +79,7 @@ func TestProcessContent(t *testing.T) {
 
 func TestAnsiStyle(t *testing.T) {
 	h := &Highlighter{}
-	
+
 	testCases := []struct {
 		name     string
 		style    string
@@ -89,7 +89,7 @@ func TestAnsiStyle(t *testing.T) {
 		{"valid formatting", "bold", Bold},
 		{"invalid style", "nonexistent", ""},
 	}
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result := h.ansiStyle(tc.style)
