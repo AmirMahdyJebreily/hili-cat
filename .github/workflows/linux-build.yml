@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-linux:
-    name: Build Linux Binary
+    name: Build Linux Binary (Linux Only)
     runs-on: ubuntu-latest
     
     steps:
@@ -25,6 +25,11 @@ jobs:
         run: |
           chmod +x ./build.sh
           ./build.sh --linux
+          
+          # Rename binary to hili-cat
+          mkdir -p build/renamed
+          cp build/highlight-linux-amd64 build/renamed/hili-cat-linux-amd64
+          chmod +x build/renamed/hili-cat-linux-amd64
       
       - name: Create Release
         id: create_release
@@ -32,8 +37,21 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            build/highlight-linux-amd64
-          name: Release ${{ github.ref_name }}
+            build/renamed/hili-cat-linux-amd64
+          name: hili-cat Linux Release ${{ github.ref_name }}
+          body: |
+            ## hili-cat ${{ github.ref_name }}
+            
+            Linux-only syntax highlighting tool for the command line.
+            
+            ### Features:
+            - Syntax highlighting for multiple languages
+            - Support for custom configuration
+            - cat-like functionality with highlighting
+            - Less integration for paged viewing
+            
+            ### System Requirements:
+            - Linux operating system
           draft: false
           prerelease: ${{ contains(github.ref, 'pre-release') }}
           generate_release_notes: true

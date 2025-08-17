@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Build script for highlight tool
+# Build script for hili-cat tool (Linux only)
 
 # Build options
 BUILD_FLAGS="-ldflags=\"-s -w\" -trimpath"
@@ -50,7 +50,7 @@ build_binary() {
   fi
   
   # Execute build
-  echo "Building highlight for $os/$arch..."
+  echo "Building hili-cat for $os/$arch..."
   eval "$BUILD_CMD go build -trimpath $flags -o $output ./cmd/highlight"
   
   # Compress with UPX if requested
@@ -68,9 +68,13 @@ build_binary() {
 
 # Default build for current platform
 if [ $# -eq 0 ]; then
-  echo "Building highlight for current platform..."
-  go build -ldflags="-s -w" -trimpath -o build/highlight ./cmd/highlight
-  echo "Binary saved to build/highlight"
+  if [[ "$OSTYPE" != "linux"* ]]; then
+    echo "Warning: hili-cat is designed for Linux only, but building on current platform..."
+  else
+    echo "Building hili-cat for Linux..."
+  fi
+  go build -ldflags="-s -w" -trimpath -o build/hili-cat ./cmd/highlight
+  echo "Binary saved to build/hili-cat"
   exit 0
 fi
 
@@ -78,27 +82,25 @@ fi
 while [ "$1" != "" ]; do
   case $1 in
     --all )
-      build_binary "linux" "amd64" "" "build/highlight-linux-amd64"
-      build_binary "darwin" "amd64" "" "build/highlight-darwin-amd64"
-      build_binary "windows" "amd64" "" "build/highlight-windows-amd64.exe"
-      build_binary "linux" "arm" "7" "build/highlight-linux-arm"
-      build_binary "linux" "arm64" "" "build/highlight-linux-arm64"
+      build_binary "linux" "amd64" "" "build/hili-cat-linux-amd64"
+      build_binary "linux" "arm" "7" "build/hili-cat-linux-arm"
+      build_binary "linux" "arm64" "" "build/hili-cat-linux-arm64"
       echo "All binaries saved to build/ directory"
       ;;
     --linux )
-      build_binary "linux" "amd64" "" "build/highlight-linux-amd64"
+      build_binary "linux" "amd64" "" "build/hili-cat-linux-amd64"
       ;;
     --darwin )
-      build_binary "darwin" "amd64" "" "build/highlight-darwin-amd64"
+      # Darwin build disabled - hili-cat is Linux only
       ;;
     --windows )
-      build_binary "windows" "amd64" "" "build/highlight-windows-amd64.exe"
+      # Windows build disabled - hili-cat is Linux only
       ;;
     --arm )
-      build_binary "linux" "arm" "7" "build/highlight-linux-arm"
+      build_binary "linux" "arm" "7" "build/hili-cat-linux-arm"
       ;;
     --arm64 )
-      build_binary "linux" "arm64" "" "build/highlight-linux-arm64"
+      build_binary "linux" "arm64" "" "build/hili-cat-linux-arm64"
       ;;
     --debug )
       DEBUG=1
@@ -128,4 +130,4 @@ done
 echo "Build complete!"
 
 # Make the binary executable
-chmod +x build/highlight*
+chmod +x build/hili-cat*

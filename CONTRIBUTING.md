@@ -1,6 +1,8 @@
-# Contributing to highlight
+# Contributing to hili-cat
 
-Thank you for considering contributing to the `highlight` project! This document provides guidelines and instructions for contributing to make the process smooth and effective.
+Thank you for considering contributing to the `hili-cat` project! This document provides guidelines and instructions for contributing to make the process smooth and effective.
+
+**Important Note:** `hili-cat` is designed for Linux environments only. While you can develop on other platforms, all features should work correctly on Linux systems.
 
 ## Table of Contents
 - [Code of Conduct](#code-of-conduct)

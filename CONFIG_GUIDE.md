@@ -1,6 +1,6 @@
-# Language Configuration Guide for highlight
+# Language Configuration Guide for hili-cat
 
-This guide explains how to create and customize language configurations for the `highlight` tool.
+This guide explains how to create and customize language configurations for the `hili-cat` tool, a Linux-only syntax highlighter.
 
 ## Table of Contents
 - [Understanding the Configuration File](#understanding-the-configuration-file)
@@ -13,7 +13,7 @@ This guide explains how to create and customize language configurations for the 
 
 ## Understanding the Configuration File
 
-The `highlight` tool uses a JSON configuration file to define syntax highlighting rules for different programming languages. The default configuration is located at `/etc/highlight/config.json`.
+The `hili-cat` tool uses a JSON configuration file to define syntax highlighting rules for different programming languages. The default configuration is located at `/etc/highlight/config.json` (this path will be automatically created when first running the tool).
 
 ### Configuration Structure
 
@@ -108,9 +108,11 @@ The `highlight` tool supports these ANSI color and style codes:
 After adding a new language:
 
 1. **Create a sample file** with the target language
-2. **Run highlight**: `highlight --config your-config.json sample-file.ext`
+2. **Run hili-cat**: `hili-cat --config your-config.json sample-file.ext`
 3. **Verify highlighting** works as expected
 4. **Iterate and refine** your patterns as needed
+
+**Note**: Since hili-cat is Linux-only, testing should be done in a Linux environment.
 
 ## Optimizing Regex Patterns
 

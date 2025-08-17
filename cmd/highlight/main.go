@@ -22,14 +22,15 @@ const (
 
 // printUsage prints the program's usage information
 func printUsage() {
-	fmt.Fprintf(os.Stderr, "Usage: highlight [options] [file...]\n\n")
+	fmt.Fprintf(os.Stderr, "Usage: hili-cat [options] [file...]\n\n")
 	fmt.Fprintf(os.Stderr, "Options:\n")
 	flag.PrintDefaults()
 	fmt.Fprintf(os.Stderr, "\nExamples:\n")
-	fmt.Fprintf(os.Stderr, "  highlight file.go                    # Highlight a Go file\n")
-	fmt.Fprintf(os.Stderr, "  cat file.json | highlight --lang json # Highlight JSON from stdin\n")
-	fmt.Fprintf(os.Stderr, "  highlight --config /path/to/config.json file.py # Use custom config\n")
-	fmt.Fprintf(os.Stderr, "  highlight --less large_file.go       # View highlighted file with pagination\n")
+	fmt.Fprintf(os.Stderr, "  hili-cat file.go                    # Highlight a Go file\n")
+	fmt.Fprintf(os.Stderr, "  cat file.json | hili-cat --lang json # Highlight JSON from stdin\n")
+	fmt.Fprintf(os.Stderr, "  hili-cat --config /path/to/config.json file.py # Use custom config\n")
+	fmt.Fprintf(os.Stderr, "  hili-cat --less large_file.go       # View highlighted file with pagination\n")
+	fmt.Fprintf(os.Stderr, "\nNote: hili-cat is designed for Linux systems only and requires the 'less' command for pagination.\n")
 }
 
 func main() {

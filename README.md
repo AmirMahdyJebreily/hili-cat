@@ -1,6 +1,6 @@
-# highlight - Lightweight Syntax Highlighter
+# hili-cat - Lightweight Syntax Highlighter for Linux
 
-A highly optimized, minimal, and scalable command-line syntax highlighting tool written in Go. This program is designed as a more powerful alternative to the `cat` command with syntax highlighting capabilities.
+A highly optimized, minimal, and scalable command-line syntax highlighting tool written in Go. This program is designed as a more powerful alternative to the `cat` command with syntax highlighting capabilities, specifically for Linux operating systems.
 
 ## Features
 
@@ -17,42 +17,57 @@ A highly optimized, minimal, and scalable command-line syntax highlighting tool 
 
 ## Installation
 
+### System Requirements
+
+- **Operating System**: Linux (not compatible with macOS or Windows)
+- **Dependencies**: 
+  - Go 1.18+ (for building from source)
+  - `less` command (for the `--less` flag functionality)
+
 ```bash
-go install github.com/AmirMahdyJebreily/hili-cat/cmd@latest
+# Install from source
+git clone https://github.com/AmirMahdyJebreily/hili-cat.git
+cd hili-cat
+./build.sh
+
+# Or use the pre-built binary from releases
+wget https://github.com/AmirMahdyJebreily/hili-cat/releases/download/pre-release0.0.1/hili-cat-linux-amd64
+chmod +x hili-cat-linux-amd64
+sudo mv hili-cat-linux-amd64 /usr/local/bin/hili-cat
 ```
 
 ## Usage
 
 ```bash
 # Highlight a file with automatic language detection
-highlight main.go
+hili-cat main.go
 
 # Highlight multiple files
-highlight file1.go file2.go
+hili-cat file1.go file2.go
 
 # Highlight stdin with a specific language
-cat main.go | highlight --lang go
+cat main.go | hili-cat --lang go
 
 # Use a custom configuration file
-highlight --config /path/to/config.json main.go
+hili-cat --config /path/to/config.json main.go
 
 # Specify line ending format
-highlight --line-ending crlf file.go
+hili-cat --line-ending crlf file.go
 
 # Show line numbers (like cat -n)
-highlight -n file.go
+hili-cat -n file.go
 
 # Show only non-blank line numbers (like cat -b)
-highlight -b file.go
+hili-cat -b file.go
 
 # Squeeze repeated blank lines (like cat -s)
-highlight -s file.go
+hili-cat -s file.go
 
 # Show line endings with $ marker (like cat -E)
-highlight -E file.go
+hili-cat -E file.go
 
 # View highlighted file using less for pagination
-highlight --less file.go
+hili-cat --less file.go
 ```
 
 ## Configuration

@@ -33,3 +33,4 @@ go.work.sum
 .github/instructions/hili-cat-instruction.instructions.md
 highlight-linux-amd64
 build/highlight
+CONTRIBUTING.md
